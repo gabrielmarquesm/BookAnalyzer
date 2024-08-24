@@ -1,0 +1,28 @@
+services:
+  # api:
+  #   build: .
+  #   env_file: .env
+  #   ports:
+  #     - 80:80
+  #   depends_on:
+  #     - db
+  #   command: ["fastapi", "run", "api/src/main.py", "--port", "80"]
+  #   volumes:
+  #     - uploads: /code/uploads
+
+  # app:
+  # volumes:
+  #   - uploads: /app/uploads
+
+  db:
+    image: postgres:16
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - ${DATASOURCE_PORT}:5432
+    environment:
+      POSTGRES_PASSWORD: ${DATASOURCE_PASSWORD}
+
+volumes:
+  postgres_data:
