@@ -1,18 +1,14 @@
 services:
-  # api:
-  #   build: .
-  #   env_file: .env
-  #   ports:
-  #     - 80:80
-  #   depends_on:
-  #     - db
-  #   command: ["fastapi", "run", "api/src/main.py", "--port", "80"]
-  #   volumes:
-  #     - uploads: /code/uploads
-
-  # app:
-  # volumes:
-  #   - uploads: /app/uploads
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - 80:80
+    depends_on:
+      - db
+    command: fastapi run api/src/main.py --port 80
+    volumes:
+      - uploads:/code/uploads
 
   db:
     image: postgres:16
@@ -26,3 +22,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads:
