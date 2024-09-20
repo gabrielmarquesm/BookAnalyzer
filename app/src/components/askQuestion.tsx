@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import styles from "../styles/AskQuestion.module.css"
+import styles from "../styles/AskQuestion.module.css";
 
 interface AskQuestionProps {
   bookId: string;

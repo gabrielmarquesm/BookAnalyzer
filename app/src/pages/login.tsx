@@ -58,7 +58,10 @@ const LoginPage = () => {
       setNewUsername("");
       setNewPassword("");
     } else {
-      alert("Failed to create account");
+      const errorData = await response.json();
+      alert(
+        `Failed to create account: ${errorData.message || "Unknown error"}`
+      );
     }
   };
 

@@ -7,13 +7,17 @@
     padding: 20px;
 }
 
-.heading {
+/* Page Heading */
+.heading,
+.pageTitle {
     font-size: 28px;
     margin-bottom: 20px;
     text-align: center;
 }
 
-.input {
+/* Input field for search */
+.input,
+.searchInput {
     margin-bottom: 15px;
     padding: 10px;
     border: 1px solid #ddd;
@@ -23,7 +27,10 @@
     max-width: 400px;
 }
 
-.button {
+/* Buttons for general actions */
+.button,
+.searchButton,
+.logoutButton {
     padding: 10px;
     border: none;
     border-radius: 4px;
@@ -35,10 +42,47 @@
     margin-bottom: 15px;
 }
 
-.button:hover {
+.button:hover,
+.searchButton:hover,
+.logoutButton:hover {
     background-color: #0056b3;
 }
 
+/* Logout Button */
+.logoutButton {
+    background-color: #ff4b5c;
+}
+
+.logoutButton:hover {
+    background-color: #ff1f3a;
+}
+
+/* File Upload Section */
+.uploadWrapper {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.fileInput {
+    margin-right: 10px;
+}
+
+.uploadButton {
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.uploadButton:disabled {
+    background-color: #aaa;
+}
+
+/* Book List Section */
 .bookList {
     list-style-type: none;
     padding: 0;

@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import styles from "../styles/User.module.css";
-import AskQuestion from "../components/askQuestion";
+import BookList from "../components/BookList";
+import {
+  fetchBooks as fetchBooksUtil,
+  handleDelete,
+  handleSearch,
+} from "../utils/bookUtils";
 
 const UserPage = () => {
   const [books, setBooks] = useState<any[]>([]);
@@ -9,67 +14,26 @@ const UserPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const router = useRouter();
 
+  const fetchBooks = async () => {
+    await fetchBooksUtil(setBooks);
+  };
+
   useEffect(() => {
     fetchBooks();
   }, []);
 
-  const fetchBooks = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/books/books`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) throw new Error("Failed to fetch books");
-      const data = await response.json();
-      setBooks(data);
-    } catch (error) {
-      console.error("Failed to fetch books", error);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
     }
   };
 
-  const handleDelete = async (bookId: string) => {
-    const token = localStorage.getItem("token");
-    try {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/books/books/${bookId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      fetchBooks();
-    } catch (error) {
-      console.error("Failed to delete book", error);
-    }
-  };
-
-  const handleSearch = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/books/books?title=${search}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) throw new Error("Failed to search books");
-      const data = await response.json();
-      setBooks(data);
-    } catch (error) {
-      console.error("Failed to search books", error);
-    }
-  };
-
-  const handleUpload = async () => {
+  const handleFileUpload = async () => {
     if (!file) return;
 
     const formData = new FormData();
@@ -98,53 +62,47 @@ const UserPage = () => {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.heading}>Welcome to Your Books</h1>
+      {/* Page Title */}
+      <h1 className={styles.pageTitle}>Your Book List</h1>
 
+      {/* Logout Button */}
+      <button onClick={handleLogout} className={styles.logoutButton}>
+        Logout
+      </button>
+
+      {/* Search Input */}
       <input
         type="text"
         placeholder="Search by title"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className={styles.input}
+        className={styles.searchInput}
       />
-      <button onClick={handleSearch} className={styles.button}>
+      <button
+        onClick={() => handleSearch(search, setBooks)}
+        className={styles.searchButton}
+      >
         Search
       </button>
 
-      <input
-        type="file"
-        onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-        className={styles.input}
-      />
-      <button onClick={handleUpload} className={styles.button}>
-        Upload Book
-      </button>
+      {/* File Input and Upload Button */}
+      <div className={styles.uploadWrapper}>
+        <input
+          type="file"
+          onChange={handleFileChange}
+          className={styles.fileInput}
+        />
+        <button
+          onClick={handleFileUpload}
+          className={styles.uploadButton}
+          disabled={!file}
+        >
+          Upload Book
+        </button>
+      </div>
 
-      <ul className={styles.bookList}>
-        {books.map((book) => (
-          <li key={book.id} className={styles.bookItem}>
-            <a
-              href={`file:../../${book.owner_id}}/${book.file_path}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.bookTitle}
-            >
-              {book.title}
-            </a>
-            <div className={styles.bookActions}>
-              <button
-                onClick={() => handleDelete(book.id)}
-                className={styles.button}
-              >
-                Delete
-              </button>
-              <div className={styles.askQuestionWrapper}>
-                <AskQuestion bookId={book.id} />
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {/* Book List */}
+      <BookList books={books} fetchBooks={fetchBooks} />
     </div>
   );
 };
