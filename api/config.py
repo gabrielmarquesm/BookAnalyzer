@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     JWT_TTL: int
     JWT_ALGORITHM: str
     DATASOURCE_URL: str
-    APP_URL: str
     OPENAI_API_KEY: str
 
 
