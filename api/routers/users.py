@@ -2,23 +2,18 @@ from typing import Annotated
 
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..error_messages import ErrorMessages
 from ..models.users import Users
-from ..utils import get_db
+from ..schemas.users import UserVerification
+from ..utils.utils import get_db
 from .auth import get_current_user
 
 router = APIRouter()
 
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(get_current_user)]
-
-
-class UserVerification(BaseModel):
-    password: str
-    new_password: str = Field(min_length=6)
 
 
 @router.get("", status_code=status.HTTP_200_OK)

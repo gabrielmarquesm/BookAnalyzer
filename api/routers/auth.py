@@ -6,33 +6,19 @@ import bcrypt
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..error_messages import ErrorMessages
 from ..models.users import Users
-from ..utils import get_db
+from ..schemas.auth import CreateUserRequest, Token, TokenPayload
+from ..utils.utils import get_db
 
 router = APIRouter()
 
 db_dependency = Annotated[Session, Depends(get_db)]
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
-
-
-class CreateUserRequest(BaseModel):
-    username: str = Field(min_length=6)
-    password: str = Field(min_length=6)
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenPayload(BaseModel):
-    sub: str
-    id: str
 
 
 def authenticate_user(username: str, password: str, db: db_dependency):

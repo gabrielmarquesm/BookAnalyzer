@@ -1,17 +1,16 @@
 import os
-import shutil
-from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 
 from ..error_messages import ErrorMessages
 from ..models.books import Books
-from ..services.rag import answer_question, load_pdf_to_documents
-from ..utils import get_db
+from ..schemas.books import BookResponse
+from ..services.rag import answer_question
+from ..utils.file_utils import save_file
+from ..utils.utils import UPLOAD_DIR, get_db
 from .auth import get_current_user
 
 router = APIRouter()
@@ -19,75 +18,11 @@ router = APIRouter()
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
-UPLOAD_DIR = Path("../../uploads")
-ALLOWED_EXTENSIONS = [".pdf"]
-
-
-class BookRequest(BaseModel):
-    file_path: str = Field(min_length=1, max_length=1000)
-
-    @field_validator("file_path")
-    def validate_file_extension(cls, value):
-        if not any(value.endswith(ext) for ext in ALLOWED_EXTENSIONS):
-            raise ValueError()
-        return value
-
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-
-class BookResponse(BaseModel):
-    id: UUID
-    title: str
-    file_path: str
-
 
 def create_user_directory(username: str):
     user_folder = UPLOAD_DIR / username
     user_folder.mkdir(parents=True, exist_ok=True)
     return user_folder
-
-
-def save_file(file: UploadFile, folder: Path):
-    filename = file.filename
-    if filename is None or filename.strip() == "":
-        return {
-            "filename": "<unknown>",
-            "status": "error",
-            "message": "Filename is missing",
-        }
-
-    try:
-        BookRequest(file_path=filename)
-    except ValueError as ve:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{ErrorMessages.INVALID_FILE_EXTENSION.value}: {', '.join(ALLOWED_EXTENSIONS)}",
-        )
-
-    file_path = folder / filename
-
-    if file_path.exists():
-        return {
-            "filename": filename,
-            "status": "skipped",
-            "message": "File already exists",
-        }
-
-    try:
-        with file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        return {
-            "filename": filename,
-            "status": "saved",
-            "message": "File saved successfully",
-        }
-    except Exception as e:
-        return {
-            "filename": filename,
-            "status": "error",
-            "message": f"Failed to save file: {str(e)}",
-        }
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
