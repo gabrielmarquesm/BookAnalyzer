@@ -90,7 +90,7 @@ def save_file(file: UploadFile, folder: Path):
         }
 
 
-@router.post("/book", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def upload_book(
     user: user_dependency,
     db: db_dependency,
@@ -122,13 +122,13 @@ async def upload_book(
                 db.rollback()
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to save {file.filename} to the database",
+                    detail=f"Failed to save {file.filename}",
                 )
 
     return {"status": status_messages}
 
 
-@router.get("/books", response_model=list[BookResponse])
+@router.get("", response_model=list[BookResponse])
 async def read_books(
     user: user_dependency,
     db: db_dependency,
@@ -149,7 +149,7 @@ async def read_books(
     return books
 
 
-@router.get("/books/{book_id}", response_model=BookResponse)
+@router.get("/{book_id}", response_model=BookResponse)
 async def read_book(book_id: UUID, user: user_dependency, db: db_dependency):
     book = (
         db.query(Books)
@@ -166,7 +166,7 @@ async def read_book(book_id: UUID, user: user_dependency, db: db_dependency):
     return book
 
 
-@router.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book(
     book_id: str,
     user: user_dependency,
@@ -203,7 +203,7 @@ async def delete_book(
         )
 
 
-@router.post("/books/{book_id}/ask")
+@router.post("/{book_id}/ask")
 async def ask_question(
     book_id: str, question: str, user: user_dependency, db: db_dependency
 ):
