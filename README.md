@@ -4,7 +4,7 @@ The Book Analyzer is an AI-powered application that lets users upload PDF docume
 ## Project Overview
 The application features:
 
-- **LangChain** Retrieval Augmented Generation that lets you ask questions about PDF documents uploaded.
+- **LangChain and Ollama** Retrieval Augmented Generation that lets you ask questions about PDF documents uploaded.
 - **FastAPI** backend with a PostgreSQL database to manage books and users.
 - Role-based authentication and authorization.
 - Fully dockerized application for easy deployment.
@@ -12,4 +12,4 @@ The application features:
 ## Technologies Used
 - **Backend**: Python, FastAPI, PostgreSQL, JWT
 - **DevOps**: Docker, Docker Compose
-- **IA**: LangChain
+- **IA**: LangChain, Ollama

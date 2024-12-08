@@ -6,9 +6,25 @@ services:
       - 8000:8000
     depends_on:
       - db
-    command: fastapi run api/main.py --port 8000
+      - ollama
+    command: fastapi dev api/main.py --host 0.0.0.0 --port 8000
     volumes:
+      - ./api:/code/api
       - uploads:/code/uploads
+      - shared_volume:/code/shared
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - 11434:11434
+    pull_policy: always
+    tty: true
+    restart: always
+    volumes:
+      - ollama_models:/root/.ollama/models
+      - shared_volume:/code/shared
+    entrypoint: ["/bin/bash", "/code/shared/entrypoint.sh"]
 
   db:
     image: postgres:16
@@ -22,4 +38,6 @@ services:
 
 volumes:
   postgres_data:
+  ollama_models:
   uploads:
+  shared_volume:

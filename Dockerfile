@@ -5,6 +5,7 @@ WORKDIR /code
 RUN apt-get update && apt-get install -y \
     build-essential \
     g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY /api/requirements.txt .
@@ -16,5 +17,8 @@ WORKDIR /code
 
 COPY --from=build /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=build /usr/local/bin /usr/local/bin
-
 COPY . .
+COPY entrypoint.sh /code/shared/entrypoint.sh
+
+RUN chmod +x /code/shared/entrypoint.sh
+

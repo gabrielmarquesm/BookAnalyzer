@@ -1,20 +1,15 @@
-import os
-
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
+from langchain_core.documents.base import Document
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import OpenAIEmbeddings
+from langchain_core.runnables import RunnablePassthrough
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ..config import settings
-
-os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
-
-from langchain_openai import ChatOpenAI
-
-llm = ChatOpenAI(model="gpt-4o")
 
 
 def load_pdf_to_documents(pdf_path):
@@ -23,42 +18,51 @@ def load_pdf_to_documents(pdf_path):
     return docs
 
 
-def create_rag_service(docs):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    splits = text_splitter.split_documents(docs)
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
-    vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings())
+
+def create_rag_service(docs: list[Document]):
+    RAG_TEMPLATE = """
+    You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
+
+    <context>
+    {context}
+    </context>
+
+    Answer the following question:
+
+    {question}
+    """
+
+    prompt = ChatPromptTemplate.from_template(RAG_TEMPLATE)
+
+    model = ChatOllama(base_url=settings.OLLAMA_URL, model=settings.OLLAMA_MODEL)
+
+    local_embeddings = OllamaEmbeddings(model="nomic-embed-text")
+
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+    all_splits = text_splitter.split_documents(docs)
+
+    vectorstore = Chroma.from_documents(
+        documents=all_splits, embedding=local_embeddings
+    )
+
     retriever = vectorstore.as_retriever()
 
-    system_prompt = (
-        "You are an assistant for question-answering tasks. "
-        "Use the following pieces of retrieved context to answer "
-        "the question. If you don't know the answer, say that you "
-        "don't know. Use three sentences maximum and keep the "
-        "answer concise."
-        "\n\n"
-        "{context}"
+    chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | model
+        | StrOutputParser()
     )
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system_prompt),
-            ("human", "{input}"),
-        ]
-    )
-
-    question_answer_chain = create_stuff_documents_chain(llm, prompt)
-    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-
-    return rag_chain
+    return chain
 
 
-def answer_question(pdf_path: str, user_question: str):
+def answer_question(pdf_path: str, question: str):
     docs = load_pdf_to_documents(pdf_path)
-    rag_chain = create_rag_service(docs)
-
-    result = rag_chain.invoke({"input": user_question})
-
-    answer = result.get("answer", "Sorry, I couldn’t find an answer to your question.")
+    chain = create_rag_service(docs)
+    answer = chain.invoke(question)
 
     return answer

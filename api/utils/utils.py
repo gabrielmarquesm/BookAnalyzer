@@ -1,7 +1,8 @@
 from pathlib import Path
+
 from ..database import SessionLocal
 
-UPLOAD_DIR = Path("../../uploads")
+UPLOAD_DIR = Path("uploads")
 ALLOWED_EXTENSIONS = [".pdf"]
 
 

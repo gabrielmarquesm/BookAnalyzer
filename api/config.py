@@ -7,7 +7,8 @@ class Settings(BaseSettings):
     JWT_TTL: int
     JWT_ALGORITHM: str
     DATASOURCE_URL: str
-    OPENAI_API_KEY: str
+    OLLAMA_URL: str
+    OLLAMA_MODEL: str
 
 
 settings = Settings()  # type: ignore

@@ -63,6 +63,24 @@ async def upload_book(
     return {"status": status_messages}
 
 
+@router.post("/{book_id}/ask")
+async def ask_question(
+    book_id: str, question: str, user: user_dependency, db: db_dependency
+):
+    book = (
+        db.query(Books)
+        .filter(Books.id == book_id, Books.owner_id == user.get("id"))
+        .first()
+    )
+    if not book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Book not found"
+        )
+
+    answer = answer_question(book.file_path, question)
+    return {"answer": answer}
+
+
 @router.get("", response_model=list[BookResponse])
 async def read_books(
     user: user_dependency,
@@ -136,19 +154,3 @@ async def delete_book(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while trying to delete the book in the database",
         )
-
-
-@router.post("/{book_id}/ask")
-async def ask_question(
-    book_id: str, question: str, user: user_dependency, db: db_dependency
-):
-    book = (
-        db.query(Books)
-        .filter(Books.id == book_id, Books.owner_id == user.get("id"))
-        .first()
-    )
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-
-    answer = answer_question(book.file_path, question)
-    return {"answer": answer}
